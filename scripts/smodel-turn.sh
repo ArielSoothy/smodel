@@ -188,10 +188,21 @@ for line in open(sys.argv[1]):
       STATS_SRC="$EVENTS"
     else
       EF=(); case "$MODEL" in *-low|*-medium|*-high) ;; *) EF=(--effort xhigh) ;; esac
-      # agy requires non-empty -p text; stdin supplies the long conversation context.
-      AGYRAW=$(cat "$HIST" | agy --model "$MODEL" ${EF[@]+"${EF[@]}"} -p "$HEADER
+      # agy ignores plain piped stdin in print mode (its token counts showed the history never arrived, 2026-10-27),
+      # so the history goes inside -p, as before the stdin change. Past 60,000 characters it keeps the heading line
+      # and the newest 60,000 characters, which keeps the argument far below the system's argument-size limit.
+      AGYHIST=$(python3 -I -c "
+import sys
+h=open(sys.argv[1]).read()
+if len(h)>60000:
+    first,_,rest=h.partition('\n')
+    h=first+'\n[earlier history cut: the newest 60,000 characters follow]\n'+rest[-60000:]
+sys.stdout.write(h)" "$HIST" 2>>"$LOG")
+      AGYRAW=$(agy --model "$MODEL" ${EF[@]+"${EF[@]}"} -p "$HEADER
 
-$MSG" --input-format text --output-format json 2>>"$LOG")
+$AGYHIST
+
+--- $MODEL (answer now) ---" --output-format json 2>>"$LOG" </dev/null)
       printf '%s' "$AGYRAW" > "$RAWJSON"
       # exit 0: answer printed; 3: status not SUCCESS (error text printed); 4: not JSON.
       ANSWER=$(python3 -I -c "

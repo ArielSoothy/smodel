@@ -1,6 +1,6 @@
 {
   "name": "smodel",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Side chat with a Claude, Codex (OpenAI) or Gemini (agy) model, preloaded with this conversation's text; the transcript is sent to the provider you pick.",
   "types": "./types/index.d.ts",
   "author": {

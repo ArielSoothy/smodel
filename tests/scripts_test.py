@@ -66,7 +66,7 @@ class ScriptsTest(unittest.TestCase):
             self.assertEqual(registry.read_text(), 'existing registry')
             self.assertEqual(list(base.glob('registry.json.tmp.*')), [])
 
-    def test_long_history_uses_stdin_and_agy_has_nonempty_prompt(self):
+    def test_long_history_uses_stdin_for_claude_codex_and_capped_prompt_for_agy(self):
         with tempfile.TemporaryDirectory(dir=ROOT / 'tests') as folder:
             base = Path(folder); binaries = base / 'bin'; binaries.mkdir()
             stub = """#!/usr/bin/env python3
@@ -101,18 +101,25 @@ else:
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(result.stdout, 'ok\n')
                 record = json.loads(calls.read_text())
+                if provider == 'agy':
+                    # agy ignores plain piped stdin in print mode, so the history rides inside -p, capped.
+                    prompt = record['argv'][record['argv'].index('-p') + 1]
+                    self.assertEqual(record['stdin'], '')
+                    self.assertNotIn('--input-format', record['argv'])
+                    self.assertIn('consulted from inside the user', prompt)
+                    self.assertTrue(prompt.split('\n\n')[1].startswith('=== CONVERSATION BETWEEN THE USER AND CLAUDE'))
+                    self.assertIn('[earlier history cut: the newest 60,000 characters follow]', prompt)
+                    self.assertIn('--- USER ---\nReply OK.', prompt)
+                    self.assertTrue(prompt.endswith('--- example-model (answer now) ---'))
+                    self.assertLess(len(prompt), 61000)
+                    self.assertTrue(all(len(arg) < 10000 for arg in record['argv'] if arg != prompt))
+                    continue
                 self.assertTrue(all(len(arg) < 10000 for arg in record['argv']))
                 self.assertIn(payload, record['stdin'])
                 if provider != 'claude':
                     self.assertIn('CONVERSATION BETWEEN THE USER AND CLAUDE', record['stdin'])
-                    if provider == 'agy':
-                        prompt = record['argv'][record['argv'].index('-p') + 1]
-                        self.assertIn('consulted from inside the user', prompt)
-                        self.assertIn('Reply OK.', prompt)
-                        self.assertNotIn(payload, prompt)
-                    else:
-                        self.assertGreater(len(record['stdin']), 600 * 1024)
-                        self.assertEqual(record['argv'][-1], '-')
+                    self.assertGreater(len(record['stdin']), 600 * 1024)
+                    self.assertEqual(record['argv'][-1], '-')
                 else:
                     # Resume, too, must send a large message without argv transport.
                     subprocess.run(['/bin/bash', str(ROOT / 'scripts/smodel-turn.sh'), provider, 'example-model', str(transcript), str(state), str(message)], env=env, capture_output=True, text=True, check=True)
