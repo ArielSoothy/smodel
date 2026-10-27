@@ -1,0 +1,18 @@
+{
+  "name": "smodel",
+  "description": "Side chat with a Claude, Codex (OpenAI) or Gemini (agy) model, preloaded with this conversation's text; the transcript is sent to the provider you pick.",
+  "owner": {
+    "name": "Ariel Soothy"
+  },
+  "plugins": [
+    {
+      "name": "smodel",
+      "description": "Side chat with a Claude, Codex (OpenAI) or Gemini (agy) model, preloaded with this conversation's text; the transcript is sent to the provider you pick.",
+      "author": {
+        "name": "Ariel Soothy"
+      },
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "smodel",
+  "version": "0.3.0",
+  "description": "Side chat with a Claude, Codex (OpenAI) or Gemini (agy) model, preloaded with this conversation's text; the transcript is sent to the provider you pick.",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "Ariel Soothy"
+  },
+  "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
+  "keywords": [
+    "models",
+    "side-chat",
+    "consultation"
+  ],
+  "homepage": "https://github.com/ArielSoothy/smodel",
+  "repository": "https://github.com/ArielSoothy/smodel",
+  "userConfig": {
+    "showLimits": {
+      "type": "boolean",
+      "title": "Show account limits",
+      "description": "Read local Claude rate-limit state and recent Codex session files for quota numbers.",
+      "default": true
+    }
+  }
+}
